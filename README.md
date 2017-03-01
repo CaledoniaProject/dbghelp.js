@@ -20,16 +20,16 @@ support api list
  * boolean SymSetSearchPath( void* hProcess , string UserSearchPath  );   
      
      
- * BigInt SymLoadModuleFile( void* hProcess , string ImageFile , string ModuleName , BigInt ImageBase , int SizeOfImage ); 
+ * ULONG64 SymLoadModuleFile( void* hProcess , string ImageFile , string ModuleName , ULONG64 ImageBase , int SizeOfImage ); 
        
        
- * boolean SymUnloadModule64( void* hProcess , BigInt ImageBase );   
+ * boolean SymUnloadModule64( void* hProcess , ULONG64 ImageBase );   
     
     
- * string SymGetNameFromAddr( void* hProcess , BigInt address );   
+ * string SymGetNameFromAddr( void* hProcess , ULONG64 address );   
     
     
- * BigInt SymGetAddrFromName( void* hProcess , string name );  
+ * ULONG64 SymGetAddrFromName( void* hProcess , string name );  
      
      
  * string UnDecorateSymbolName( string name );   
@@ -54,7 +54,7 @@ printf('[SymGetSymbolFile]  %s \n' , PdbFile );
 
 pWin32kBase = dbghelp.SymLoadModuleFile( hProcess , BinFile );
 
-printf('[SymLoadModule64]  %s \n' , pWin32kBase );
+printf('[SymLoadModuleFile]  %s \n' , pWin32kBase );
 
 var a = dbghelp.SymGetAddrFromName(hProcess , "gpW32FastMutex" );
 
