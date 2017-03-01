@@ -25,9 +25,8 @@
     "url": "https://github.com/tinysec/dbghelp.js/issues"
   },
   "dependencies": {
-    "cprintf": "^1.0.49",
     "ffi": "^2.2.0",
-    "number64": "0.0.4",
+    "number64": "0.0.5",
     "ref": "^1.3.4",
     "ref-pointer": "0.0.3",
     "ref-sizeof": "0.0.1",

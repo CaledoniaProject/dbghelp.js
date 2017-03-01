@@ -1,9 +1,5 @@
 'use strict';
 
-const printf = require('cprintf').printf;
-const sprintf = require('cprintf').sprintf;
-const KdPrint = require('cprintf').KdPrint;
-
 const assert = require('assert');
 
 const path = require('path');

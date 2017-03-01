@@ -1,9 +1,5 @@
 'use strict';
 
-const printf = require('cprintf').printf;
-const sprintf = require('cprintf').sprintf;
-const KdPrint = require('cprintf').KdPrint;
-
 const _ = require('underscore');
 
 const fs = require('fs');
@@ -662,7 +658,7 @@ function SymGetNameFromAddr( arg_hProcess , arg_address )
     }
     else
     {
-        return sprintf('%s+0x%x' , sym.name , sym.offset );
+        return sym.name + '+0x' + sym.offset.toString(16);
     }
 }
 exports.SymGetNameFromAddr = SymGetNameFromAddr;
