@@ -133,7 +133,7 @@ var declare_table = {
 
 // "SymFindFileInPathW" : [ "int" ,  [ "void*" ] , ffi.FFI_STDCALL ] ,
 
- "SymFromAddrW" : [ "int" ,  [ "void*" , "ulonglong" , "void*" , "void*" ] , ffi.FFI_STDCALL ] ,
+// "SymFromAddrW" : [ "int" ,  [ "void*" , "ulonglong" , "void*" , "void*" ] , ffi.FFI_STDCALL ] ,
 
 // "SymFromIndexW" : [ "int" ,  [ "void*" ] , ffi.FFI_STDCALL ] ,
 
@@ -318,6 +318,22 @@ var declare_table = {
 
     "_dummy" : null 
 };
+
+// dirty hack , fuck node-ffi's 64bit trans bug!
+if ( arch_x64 )
+{
+    declare_table["SymGetSymFromAddr64"] = [ "int" ,  [ "void*" , "void*" , "void*" , "void*" ] , ffi.FFI_STDCALL ] ,
+    declare_table["SymLoadModule64"] = [ "void*" ,  [ "void*" , "void*"  , "void*" , "void*"  , "void*" , "ulong"  ] , ffi.FFI_STDCALL ];
+    declare_table["SymUnloadModule64"] = [ "int" ,  [ "void*" ] , ffi.FFI_STDCALL ];
+}
+else
+{
+    declare_table["SymGetSymFromAddr64"] = [ "int" ,  [ "void*" , "ulonglong" , "void*" , "void*" ] , ffi.FFI_STDCALL ] ,
+    declare_table["SymLoadModule64"] = [ "ulonglong" ,  [ "void*" , "void*"  , "void*" , "void*"  , "ulonglong" , "ulong"  ] , ffi.FFI_STDCALL ];
+    declare_table["SymUnloadModule64"] = [ "int" ,  [ "ulonglong" ] , ffi.FFI_STDCALL ];
+}
+
+
 
 var api_name = null;
 var api_declare = null;
