@@ -1,6 +1,6 @@
 {
   "name": "dbghelp.js",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "private": false,
   "description": "windows dbghelp util",
   "scripts": {},
@@ -25,7 +25,7 @@
     "url": "https://github.com/tinysec/dbghelp.js/issues"
   },
   "dependencies": {
-    "cprintf": "^1.0.44",
+    "cprintf": "^1.0.48",
     "ffi": "^2.2.0",
     "number64": "0.0.4",
     "ref": "^1.3.4",
