@@ -199,8 +199,6 @@ var declare_table = {
 
 // "SymGetSymFromAddr" : [ "int" ,  [ "void*" ] , ffi.FFI_STDCALL ] ,
 
- "SymGetSymFromAddr64" : [ "int" ,  [ "void*" , "ulonglong" , "void*" , "void*" ] , ffi.FFI_STDCALL ] ,
-
 // "SymGetSymFromName" : [ "int" ,  [ "void*" ] , ffi.FFI_STDCALL ] ,
 
  "SymGetSymFromName64" : [ "int" ,  [ "void*" , "void*" , "void*" ] , ffi.FFI_STDCALL ] ,
@@ -239,8 +237,6 @@ var declare_table = {
   "SymInitializeW" : [ "int" ,  [ "void*" , "void*" , "int" ] , ffi.FFI_STDCALL ] ,
 
 // "SymLoadModule" : [ "int" ,  [ "void*" ] , ffi.FFI_STDCALL ] ,
-
- "SymLoadModule64" : [ "ulonglong" ,  [ "void*" , "void*"  , "void*" , "void*"  , "ulonglong" , "ulong"  ] , ffi.FFI_STDCALL ] ,
 
 // "SymLoadModuleExW" : [ "int" ,  [ "void*" ] , ffi.FFI_STDCALL ] ,
 
@@ -304,8 +300,6 @@ var declare_table = {
 
 // "SymUnloadModule" : [ "int" ,  [ "void*" ] , ffi.FFI_STDCALL ] ,
 
-  "SymUnloadModule64" : [ "int" ,  [ "ulonglong" ] , ffi.FFI_STDCALL ] ,
-
  "UnDecorateSymbolNameW" : [ "ulong" ,  [ "void*" , "void*" , "ulong" , "ulong" ] , ffi.FFI_STDCALL ] ,
 
 // "UnmapDebugInformation" : [ "int" ,  [ "void*" ] , ffi.FFI_STDCALL ] ,
@@ -324,12 +318,10 @@ if ( arch_x64 )
 }
 else
 {
-    declare_table["SymGetSymFromAddr64"] = [ "int" ,  [ "void*" , "ulonglong" , "void*" , "void*" ] , ffi.FFI_STDCALL ] ,
-    declare_table["SymLoadModule64"] = [ "ulonglong" ,  [ "void*" , "void*"  , "void*" , "void*"  , "ulonglong" , "ulong"  ] , ffi.FFI_STDCALL ];
-    declare_table["SymUnloadModule64"] = [ "int" ,  [ "ulonglong" ] , ffi.FFI_STDCALL ];
+    declare_table["SymGetSymFromAddr64"] = [ "int" ,  [ "void*" , "ulong" , "ulong" , "void*" , "void*" ] , ffi.FFI_STDCALL ] ,
+    declare_table["SymLoadModule64"] = [ "ulonglong" ,  [ "void*" , "void*"  , "void*" , "void*"  , "ulong" , "ulong" , "ulong"  ] , ffi.FFI_STDCALL ];
+    declare_table["SymUnloadModule64"] = [ "int" ,  [ "ulong" , "ulong" ] , ffi.FFI_STDCALL ];
 }
-
-
 
 var api_name = null;
 var api_declare = null;

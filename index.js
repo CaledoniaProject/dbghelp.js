@@ -10,13 +10,15 @@ const LONG64 = require('number64').LONG64;
 const POINTER = require('ref-pointer');
 
 const ref = require('ref');
-
 const arch_x64 = (process.arch === 'x64');
+
+
 
 const ffi_dbghelp = require('./ffi_dbghelp.js');
 const ffi_kernel32 = require('./ffi_kernel32.js');
 
 exports.GetCurrentProcess = ffi_kernel32.GetCurrentProcess;
+
 
 
 function SymInitialize( arg_hProcess , arg_SearchPath , arg_InvadeProcess )
@@ -297,102 +299,6 @@ function SymSetSearchPath( arg_hProcess , arg_SearchPath )
 }
 exports.SymSetSearchPath = SymSetSearchPath;
 
-function SymLoadModule64(  )
-{
-    var argv = Array.prototype.slice.call(arguments);
-    var hProcess = null;
-  
-    var hFile = null;
-    var pszImageName = null;
-    var pszModuleName = null;
-    var nBaseOfDll = 0;
-    var nSizeOfDll = 0;
-
-    if ( 0 == argv.length )
-    {
-        hProcess = ffi_kernel32.GetCurrentProcess();
-    }
-    else
-    {
-        if ( !hProcess )
-        {
-            hProcess = ffi_kernel32.GetCurrentProcess();
-        }
-        else
-        {
-            hProcess = argv[0];
-        }
-
-        if ( argv.length >= 2 )
-        {
-            if ( argv[1] )
-            {
-                hFile = argv[1];
-            }
-        }
-
-        if ( argv.length >= 3 )
-        {
-            if ( _.isString( argv[2] ) && ( 0 != argv[2].length ) )
-            {
-                pszImageName = Buffer.alloc( ( argv[2].length + 1) * 1 ).fill(0);
-                pszImageName.write( argv[2] , 0 , 'ascii');
-            }
-        }
-
-        if ( argv.length >= 4 )
-        {
-            if ( _.isString( argv[3] ) && ( 0 != argv[3].length ) )
-            {
-                pszModuleName = Buffer.alloc( ( argv[3].length + 1) * 1 ).fill(0);
-                pszModuleName.write( argv[3] , 0 , 'ascii');
-            }
-        }
-
-        if ( argv.length >= 5 )
-        {
-            nBaseOfDll = ULONG64( argv[4] );
-        }
-
-        if ( argv.length >= 6 )
-        {
-            if ( _.isNumber( argv[5] ) )
-            {
-                nSizeOfDll = argv[5];
-            }
-        }
-    }
-
-    // dirty hack , fuck node-ffi's 64bit trans bug!
-    if ( arch_x64 )
-    {
-         nBaseOfDll = POINTER( nBaseOfDll );
-    }
-    else
-    {
-        nBaseOfDll = nBaseOfDll.toString(10);
-    }
-
-   var api_ret = ffi_dbghelp.SymLoadModule64( 
-        hProcess ,
-        hFile , 
-        pszImageName ,
-        pszModuleName , 
-        nBaseOfDll , 
-        nSizeOfDll 
-    );
-
-    if ( arch_x64 )
-    {
-        return ULONG64( '0x' + api_ret.hexAddress() );
-    }
-    else
-    {
-        return ULONG64( api_ret );
-    }
-}
-//exports.SymLoadModule64 = SymLoadModule64;
-
 function SymLoadModuleFile( arg_hProcess , arg_ImageFile , arg_ModuleName , arg_ImageBase , arg_SizeOfImage )
 {
     var argv = Array.prototype.slice.call(arguments);
@@ -400,7 +306,7 @@ function SymLoadModuleFile( arg_hProcess , arg_ImageFile , arg_ModuleName , arg_
   
     var pszImageName = null;
     var pszModuleName = null;
-    var nBaseOfDll = 0;
+    var nBaseOfDll = ULONG64(0);
     var nSizeOfDll = 0;
 
     if ( 0 == argv.length )
@@ -450,32 +356,47 @@ function SymLoadModuleFile( arg_hProcess , arg_ImageFile , arg_ModuleName , arg_
         }
     }
 
+    var api_ret = null;
+
     // dirty hack , fuck node-ffi's 64bit trans bug!
+    // due to this bug , at arch_x86 , when you use 64bit imagebase , you will not got the right return value
     if ( arch_x64 )
     {
-         nBaseOfDll = POINTER( nBaseOfDll );
-    }
-    else
-    {
-        nBaseOfDll = nBaseOfDll.toString(10);
-    }
-
-    var api_ret = ffi_dbghelp.SymLoadModule64( 
+        api_ret = ffi_dbghelp.SymLoadModule64( 
             hProcess ,
             null  , 
             pszImageName ,
             pszModuleName , 
-            nBaseOfDll , 
+            POINTER( nBaseOfDll ) , 
             nSizeOfDll 
-    );
-    
-    if ( arch_x64 )
-    {
-        return ULONG64( '0x' + api_ret.hexAddress() );
+        );
     }
     else
     {
+        api_ret = ffi_dbghelp.SymLoadModule64( 
+            hProcess ,
+            null  , 
+            pszImageName ,
+            pszModuleName , 
+            nBaseOfDll.getLowPart() ,
+            nBaseOfDll.getHighPart(), 
+            nSizeOfDll 
+        );
+    }
+
+    if ( arch_x64 )
+    {
         return ULONG64( api_ret );
+    }
+    else
+    {
+        // hack ret , fuck node-ffi's 64bit trans bug!
+        if ( 0 == api_ret )
+        {
+            return ULONG64(0);
+        }
+
+        return nBaseOfDll;
     }
 }
 exports.SymLoadModuleFile = SymLoadModuleFile;
@@ -484,7 +405,8 @@ function SymUnloadModule64( arg_hProcess , arg_ImageBase )
 {
     var argv = Array.prototype.slice.call(arguments);
     var hProcess = null;
-    var nBaseOfDll = 0;
+    var nBaseOfDll = ULONG64(0);
+    var nRet = 0;
 
     if ( 0 == argv.length )
     {
@@ -503,21 +425,27 @@ function SymUnloadModule64( arg_hProcess , arg_ImageBase )
 
         if ( argv.length >= 2 )
         {
-            nBaseOfDll = ULONG( argv[1] );
+            nBaseOfDll = ULONG64( argv[1] );
         }
     }
 
-    // dirty hack , fuck node-ffi's 64bit trans bug!
     if ( arch_x64 )
     {
-         nBaseOfDll = POINTER( nBaseOfDll );
+        nRet = ffi_dbghelp.SymUnloadModule64( 
+            hProcess ,
+            POINTER( nBaseOfDll )
+        );
     }
     else
     {
-        nBaseOfDll = nBaseOfDll.toString(10);
+        nRet =ffi_dbghelp.SymUnloadModule64( 
+            hProcess , 
+            nBaseOfDll.getLowPart() ,
+            nBaseOfDll.getHighPart()
+        );
     }
 
-    return ( 0 != ffi_dbghelp.SymUnloadModule64( hProcess , nBaseOfDll ) );
+    return ( 0 != nRet );
 }
 exports.SymUnloadModule64 = SymUnloadModule64;
 
@@ -526,9 +454,8 @@ function SymGetSymFromAddr64(  )
     var argv = Array.prototype.slice.call(arguments);
     var hProcess = null;
 
-    var nAddress = 0;
+    var nAddress = ULONG64(0);
     var lpDisplacement = null;
-    var deref_lpDisplacement = null;
 
     var nSymbol64BufferSize = 0;
     var lpSymbol64 = null;
@@ -564,7 +491,6 @@ function SymGetSymFromAddr64(  )
     }
 
     lpDisplacement = Buffer.alloc( 8 ).fill(0);
-    lpDisplacement.type = 'ulonglong';
 
     MaxNameLength = 1024;
 
@@ -579,29 +505,30 @@ function SymGetSymFromAddr64(  )
     deref_lpSymbol64.SizeOfStruct = ffi_dbghelp.SIZEOF_IMAGEHLP_SYMBOL64;
     deref_lpSymbol64.MaxNameLength = MaxNameLength;
 
-
-    // dirty hack , fuck node-ffi's 64bit trans bug!
     if ( arch_x64 )
     {
-         nAddress = POINTER( nAddress );
+        nRet = ffi_dbghelp.SymGetSymFromAddr64( 
+            hProcess ,
+            POINTER( nAddress ) ,
+            lpDisplacement ,
+            lpSymbol64  
+        );
     }
     else
     {
-        nAddress = nAddress.toString(10);
+        nRet = ffi_dbghelp.SymGetSymFromAddr64( 
+            hProcess ,
+            nAddress.getLowPart(),
+            nAddress.getHighPart(),
+            lpDisplacement ,
+            lpSymbol64  
+        );
     }
-
-    nRet = ffi_dbghelp.SymGetSymFromAddr64( hProcess ,
-        nAddress ,
-        lpDisplacement ,
-        lpSymbol64  
-    );
 
     if ( !nRet )
     {
         return null;
     }
-
-    deref_lpDisplacement = lpDisplacement.deref();
 
     api_ret = {};
 
@@ -613,7 +540,11 @@ function SymGetSymFromAddr64(  )
 
     var name_len = ffi_kernel32.lstrlenA( lpSymbol64_name );
     api_ret.name = lpSymbol64_name.toString('ascii' , 0 , name_len * 1 );
-    api_ret.offset = ULONG64( deref_lpDisplacement );
+
+    api_ret.offset = ULONG64( 
+            lpDisplacement.readUInt32LE( 0 ),
+            lpDisplacement.readUInt32LE( 4 )
+     );
  
     return api_ret;
 }

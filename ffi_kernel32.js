@@ -17,6 +17,8 @@ var lib_kernel32 = ffi.DynamicLibrary( "kernel32.dll" );
 
 var declare_table = {
 
+    "Sleep" : [ "ulong" ,  [ "ulong" ] , ffi.FFI_STDCALL ] ,
+
   "GetCurrentProcess" : [ "void*" ,  [ ] , ffi.FFI_STDCALL ] ,
 
   "lstrlenA" : [ "int" ,  [ "void*" ] , ffi.FFI_STDCALL ] ,
